@@ -8,4 +8,6 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
-Route::get('users/{id?}','App\Http\COntrollers\APIController@getUsers');
+Route::get('users/{id?}','App\Http\Controllers\APIController@getUsers');
+
+Route::get('categories','App\Http\Controllers\APIController@getCategories');

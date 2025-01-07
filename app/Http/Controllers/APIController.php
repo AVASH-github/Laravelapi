@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\User;
 class APIController extends Controller
@@ -19,4 +20,10 @@ class APIController extends Controller
         } 
 
     }
+
+    public function getCategories(){
+        $categories=Category::get();
+        return response()->json(["categories"=>$categories]);
+    }
+
 }

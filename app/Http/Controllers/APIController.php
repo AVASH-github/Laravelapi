@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Validator;
 class APIController extends Controller
 {
     public function getUsers($id=null)
@@ -36,25 +37,46 @@ class APIController extends Controller
             //SImple POST API validations 
             //Check user details
 
-            if(empty($userData['name'])||empty($userData['email'])||empty($userData['password']))
-            {
-                $message= "Please enter complete user details!";
-                    return response()->json(["status"=>false,"message"=>$message],422);
-            }
+            // if(empty($userData['name'])||empty($userData['email'])||empty($userData['password']))
+            // {
+            //     $message= "Please enter complete user details!";
+            //         return response()->json(["status"=>false,"message"=>$message],422);
+            // }
 
-            //Check email validate
-            if(!filter_var($userData['email'],FILTER_VALIDATE_EMAIL)){
-                $message= "Please enter valid Email!";
-                return response()->json(["status"=>false,"message"=>$message],422);
-            }
-            // CHeck if User Email Already Exists
+            // //Check email validate
+            // if(!filter_var($userData['email'],FILTER_VALIDATE_EMAIL)){
+            //     $message= "Please enter valid Email!";
+            //     return response()->json(["status"=>false,"message"=>$message],422);
+            // }
+            // // CHeck if User Email Already Exists
 
-            $userCount= User::where('email',$userData['email'])->count();
+            // $userCount= User::where('email',$userData['email'])->count();
 
-            if($userCount>0){
-                $message= "Email Already Exists!";
-                return response()->json(["status"=>false,"message"=>$message],422);
-            }
+            // if($userCount>0){
+            //     $message= "Email Already Exists!";
+            //     return response()->json(["status"=>false,"message"=>$message],422);
+            // }
+
+            //Advance POST API VALidation 
+
+                $rules=[
+                        "name" => "required|regex:/^[\pL\s\-]+$/u",
+                        "email" => "required|email|unique:users",
+                        "password" => "required"
+                ];
+
+                $customMessage=[
+                        'name.required' => 'Name is required',
+                        'email.required' => 'Email is required',
+                        'email.email' => 'Valid Email is required',
+                        'email.unique' => 'Email already exists in databse',
+                        'password.required' => 'Password is required'
+                ];
+
+               $validator= Validator::make($userData,$rules,  $customMessage);
+               if($validator->fails()){
+                return response()->json($validator->errors(),422);
+               } 
 
             $user = new User;
 
@@ -73,7 +95,28 @@ class APIController extends Controller
         if($request->isMethod('post')){
             $userData=$request->input();
 
+            $rules = [
+                "users.*.name"=>"required|regex:/^[\pL\s\-]+$/u",
+                "users.*.email" => "required|unique:users",
+                "users.*.password" => "required"
+            ];
+
+            $customMessage=[
+                'users.*.name.required' => 'Name is required',
+                'users.*.email.required' => 'Email is required',
+                'users.*.email.email' => 'Valid Email is required',
+                'users.*.email.unique' => 'Email already exists in databse',
+                'users.*.password.required' => 'Password is required'
+        ];
+
             // echo "<pre>"; print_r($userData);die;
+
+
+            $validator= Validator::make($userData,$rules,$customMessage);
+            if($validator->fails()){
+                return response()->json($validator->errors(),422);
+               } 
+
             foreach ($userData['users'] as $key => $value) {
                 $user = new User;
 

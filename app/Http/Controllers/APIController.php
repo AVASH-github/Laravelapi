@@ -7,6 +7,7 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\Tests\RequestMatcher\IsJsonRequestMatcherTest;
 class APIController extends Controller
 {
     public function getUsers($id=null)
@@ -22,6 +23,28 @@ class APIController extends Controller
 
     }
 
+    // public function getUsersList(Request $request)
+    // {
+    //     $header= $request->header('Authorization');
+    //     if(empty($header)){
+    //             $message="Header Authorization is missing!";
+
+    //             return response()->json(['status'=>false,"message"=>$message],422);
+    //     }
+    //     else{
+    //         if($header="123456"){
+    //             $users = User::get();
+    //             return response()->json(["users"=>$users],200); 
+    //         }
+    //         else{
+    //             $message="Header Authorization is missing!";
+
+    //             return response()->json(['status'=>false,"message"=>$message],422);
+    //         }
+            
+    //     }
+
+    // }
     public function getCategories(){
         $categories=Category::get();
         return response()->json(["categories"=>$categories]);
@@ -173,6 +196,38 @@ class APIController extends Controller
        
     }
 
-    
+    public function deleteUser($id){
 
+        User::where('id',$id)->delete();
+        return response()->json(["message"=>"User Deleted Successfully"],202);
+    }
+
+
+    public function deleteUserWithJson(Request $request){
+
+        if($request->isMethod('delete')){
+            $userData=$request->input();
+        }
+//   echo"<pre>";print_r($userData);die;
+
+User::where('id',$userData['id'])->delete();
+
+return response()->json(["message"=>"User Deleted Successfully!!"],202);
+
+    }
+
+
+    public function deleteMultipleUsers($ids){
+        $ids = explode(",",$ids);
+        //   echo"<pre>";print_r($ids);die;
+        User::whereIn('id',$ids)->delete();
+        return response()->json(["message"=>"Users Deleted Successfully!!"],202);
+    }
+    public function deleteMultipleUsersWithJson(Request $request){
+        if($request->isMethod('delete')){
+            $userData=$request->all();
+        User::whereIn('id',$userData['ids'])->delete();
+        return response()->json(["message"=>"Users Deleted Successfully!!"],202);
+        }
+    }
 }

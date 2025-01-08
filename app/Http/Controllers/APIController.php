@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Tests\RequestMatcher\IsJsonRequestMatcherTest;
+use Illuminate\Support\Str;
 class APIController extends Controller
 {
     public function getUsers($id=null)
@@ -22,29 +23,26 @@ class APIController extends Controller
         } 
 
     }
+    public function getUsersList(Request $request)
+    {
+        $header= $request->header('Authorization');
+        if(empty($header)){
+                $message="Header Authorization is missing!";
+                return response()->json(['status'=>false,"message"=>$message],422);
+        }
+        else{
+            if($header=="123456"){
+                $users = User::get();
+                return response()->json(["users"=>$users],200); 
+            }
+            else{
 
-    // public function getUsersList(Request $request)
-    // {
-    //     $header= $request->header('Authorization');
-    //     if(empty($header)){
-    //             $message="Header Authorization is missing!";
+                $message="Header Authorization is missing!";
 
-    //             return response()->json(['status'=>false,"message"=>$message],422);
-    //     }
-    //     else{
-    //         if($header="123456"){
-    //             $users = User::get();
-    //             return response()->json(["users"=>$users],200); 
-    //         }
-    //         else{
-    //             $message="Header Authorization is missing!";
-
-    //             return response()->json(['status'=>false,"message"=>$message],422);
-    //         }
-            
-    //     }
-
-    // }
+                return response()->json(['status'=>false,"message"=>$message],422);
+            }           
+        }
+    }
     public function getCategories(){
         $categories=Category::get();
         return response()->json(["categories"=>$categories]);
@@ -81,7 +79,6 @@ class APIController extends Controller
             // }
 
             //Advance POST API VALidation 
-
                 $rules=[
                         "name" => "required|regex:/^[\pL\s\-]+$/u",
                         "email" => "required|email|unique:users",
@@ -100,30 +97,69 @@ class APIController extends Controller
                if($validator->fails()){
                 return response()->json($validator->errors(),422);
                } 
-
             $user = new User;
-
             $user->name= $userData['name'];
             $user->email= $userData['email'];
             $user->password= bcrypt($userData['password']);
             $user->save();
-
             return response()->json(["message"=>'User added successfully!'],201);
-
         }
     }
 
+    public function registerUser(Request $request){
+                if($request->isMethod('post')){
+                    $userData=$request->input();
+                    // echo"<pre>"; print_r($userData);die;
+                    $rules=[
+                        "name" => "required|regex:/^[\pL\s\-]+$/u",
+                        "email" => "required|email|unique:users",
+                        "password" => "required"
+                ];
+
+                $customMessage=[
+                        'name.required' => 'Name is required',
+                        'email.required' => 'Email is required',
+                        'email.email' => 'Valid Email is required',
+                        'email.unique' => 'Email already exists in databse',
+                        'password.required' => 'Password is required'
+                ];
+
+               $validator= Validator::make($userData,$rules,  $customMessage);
+               if($validator->fails()){
+                return response()->json($validator->errors(),422);
+               } 
+
+                    //Generate Unique Access Token
+
+                    $apiToken = Str::random(60);
+
+                    $user = new User;
+
+                    $user->name=$userData['name'];
+                    $user->email=$userData['email'];
+                    $user->password=bcrypt($userData['password']);
+                    $user->api_token=$apiToken;
+                    $user->save();
+
+                    return response()->json([
+                        'status'=>true,
+                        "message"=>"User registered successfully",
+                        "token"=>$apiToken
+                    ]
+                        ,
+                        201);
+
+                }
+    }
     public function addMultipleUsers(Request $request){
 
         if($request->isMethod('post')){
             $userData=$request->input();
-
             $rules = [
                 "users.*.name"=>"required|regex:/^[\pL\s\-]+$/u",
                 "users.*.email" => "required|unique:users",
                 "users.*.password" => "required"
             ];
-
             $customMessage=[
                 'users.*.name.required' => 'Name is required',
                 'users.*.email.required' => 'Email is required',
@@ -131,10 +167,7 @@ class APIController extends Controller
                 'users.*.email.unique' => 'Email already exists in databse',
                 'users.*.password.required' => 'Password is required'
         ];
-
             // echo "<pre>"; print_r($userData);die;
-
-
             $validator= Validator::make($userData,$rules,$customMessage);
             if($validator->fails()){
                 return response()->json($validator->errors(),422);
@@ -148,19 +181,14 @@ class APIController extends Controller
                 $user->password= bcrypt($value['password']);
                 $user->save();
             }
-
             return response()->json(["message"=>'User added successfully!'],201);
         }
-
     }
-    
-    public function updateUserDetails(Request $request){
+        public function updateUserDetails(Request $request){
 
             if($request->isMethod('put')){
                     $userData=$request->input();
-
                      // echo "<pre>"; print_r($userData);die;
-
                      $rules=[
                         "name" => "required|regex:/^[\pL\s\-]+$/u",
                         "password" => "required"
@@ -170,7 +198,6 @@ class APIController extends Controller
                         'name.required' => 'Name is required',
                         'password.required' => 'Password is required'
                 ];
-
                $validator= Validator::make($userData,$rules,  $customMessage);
                if($validator->fails()){
                 return response()->json($validator->errors(),422);
@@ -181,28 +208,21 @@ class APIController extends Controller
                     return response()->json(["message"=>"User Details Updated Successfully"],202);
             }
     }
-
     public function updateUserName(Request $request,$id){
 
         if ($request->isMethod('patch')){
             $userData=$request->input();
         }
-
         // echo"<pre>";print_r($userData);die;
-
         User::where('id',$id)->update(['name'=>$userData['name']]);
 
-        return response()->json(['message'=>"User Detail Updated Successfully"],202);
-       
+        return response()->json(['message'=>"User Detail Updated Successfully"],202);     
     }
-
     public function deleteUser($id){
 
         User::where('id',$id)->delete();
         return response()->json(["message"=>"User Deleted Successfully"],202);
     }
-
-
     public function deleteUserWithJson(Request $request){
 
         if($request->isMethod('delete')){
@@ -210,13 +230,9 @@ class APIController extends Controller
         }
 //   echo"<pre>";print_r($userData);die;
 
-User::where('id',$userData['id'])->delete();
-
-return response()->json(["message"=>"User Deleted Successfully!!"],202);
-
+        User::where('id',$userData['id'])->delete();
+        return response()->json(["message"=>"User Deleted Successfully!!"],202);
     }
-
-
     public function deleteMultipleUsers($ids){
         $ids = explode(",",$ids);
         //   echo"<pre>";print_r($ids);die;
@@ -231,3 +247,4 @@ return response()->json(["message"=>"User Deleted Successfully!!"],202);
         }
     }
 }
+

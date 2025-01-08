@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\APIController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -10,42 +11,39 @@ Route::get('/user', function (Request $request) {
 
 Route::namespace('App\Http\Controllers')->group(function(){    //since they use common route App\Http\Controllers
    //GET API - Getch one or more records
-    Route::get('users/{id?}','APIController@getUsers');
+   Route::get('users/{id?}', [APIController::class, 'getUsers']);
 
-    //Secure GET API - Getch one or more records
-    Route::get('users-list','APIController@getUsersList');
+    // Secure GET API - Fetch one or more records
+    Route::get('users-list', [APIController::class, 'getUsersList']);
 
-Route::get('categories','APIController@getCategories');
+    // GET API - Fetch categories
+    Route::get('categories', [APIController::class, 'getCategories']);
 
-//POST API - Add single user
-Route::post('add-users','APIController@addUsers');
+    // POST API - Add a single user
+    Route::post('add-users', [APIController::class, 'addUsers']);
 
-//POST API- Add multiple users
+    // POST API - Add multiple users
+    Route::post('add-multiple-users', [APIController::class, 'addMultipleUsers']);
 
-Route::post('add-multiple-users','APIController@addMultipleUsers');
+    // POST API - Register user with API token
+    Route::post('register-user', [APIController::class, 'registerUser']);
 
-//PUT API -Update one or more records
-Route::put('update-user-details','APIController@updateUserDetails');
+    // PUT API - Update one or more records
+    Route::put('update-user-details', [APIController::class, 'updateUserDetails']);
 
-// PATCH API - Update single record 
+    // PATCH API - Update a single record
+    Route::patch('update-user-name/{id}', [APIController::class, 'updateUserName']);
 
-Route::patch ('update-user-name/{id}','APIController@updateUserName');
+    // DELETE API - Delete a single user
+    Route::delete('delete-user/{id}', [APIController::class, 'deleteUser']);
 
+    // DELETE API - Delete a single user with JSON payload
+    Route::delete('delete-user-with-json', [APIController::class, 'deleteUserWithJson']);
 
-// DELETE API - Delete single user
+    // DELETE API - Delete multiple users by parameters
+    Route::delete('delete-multiple-users/{ids}', [APIController::class, 'deleteMultipleUsers']);
 
-Route::delete('delete-user/{id}','APIController@deleteUser');
-
-//DELETE API- Delete single user with json 
-Route::delete('delete-user-with-json','APIController@deleteUserWithJson');
-
-//DELETE API- Delete multiple users with param
-
-Route::delete('delete-multiple-users/{ids}','APIController@deleteMultipleUsers');
-
-//DELETE API- Delete multiple users with json 
-
-
-Route::delete('delete-multiple-users-json','APIController@deleteMultipleUsersWithJson');
+    // DELETE API - Delete multiple users with JSON payload
+    Route::delete('delete-multiple-users-json', [APIController::class, 'deleteMultipleUsersWithJson']);
 });
 

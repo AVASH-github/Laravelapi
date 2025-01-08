@@ -130,5 +130,35 @@ class APIController extends Controller
         }
 
     }
+    
+    public function updateUserDetails(Request $request){
+
+            if($request->isMethod('put')){
+                    $userData=$request->input();
+
+                     // echo "<pre>"; print_r($userData);die;
+
+                     $rules=[
+                        "name" => "required|regex:/^[\pL\s\-]+$/u",
+                        "password" => "required"
+                ];
+
+                $customMessage=[
+                        'name.required' => 'Name is required',
+                        'password.required' => 'Password is required'
+                ];
+
+               $validator= Validator::make($userData,$rules,  $customMessage);
+               if($validator->fails()){
+                return response()->json($validator->errors(),422);
+               } 
+
+                    User::where('id',$userData['id'])->update(['name'=>$userData['name'],'password'=>bcrypt($userData['password'])]);
+
+                    return response()->json(["message"=>"User Details Updated Successfully"],202);
+            }
+
+
+    }
 
 }

@@ -157,8 +157,22 @@ class APIController extends Controller
 
                     return response()->json(["message"=>"User Details Updated Successfully"],202);
             }
-
-
     }
+
+    public function updateUserName(Request $request,$id){
+
+        if ($request->isMethod('patch')){
+            $userData=$request->input();
+        }
+
+        // echo"<pre>";print_r($userData);die;
+
+        User::where('id',$id)->update(['name'=>$userData['name']]);
+
+        return response()->json(['message'=>"User Detail Updated Successfully"],202);
+       
+    }
+
+    
 
 }

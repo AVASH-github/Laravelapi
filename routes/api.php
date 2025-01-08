@@ -24,5 +24,9 @@ Route::post('add-multiple-users','APIController@addMultipleUsers');
 //PUT API -Update one or more records
 Route::put('update-user-details','APIController@updateUserDetails');
 
+// PATCH API - Update single record 
+
+Route::patch ('update-user-name/{id}','APIController@updateUserName');
+
 });
 

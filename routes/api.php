@@ -28,6 +28,14 @@ Route::namespace('App\Http\Controllers')->group(function(){    //since they use 
     // POST API - Register user with API token
     Route::post('register-user', [APIController::class, 'registerUser']);
 
+    //Login API- Login User adn update / return API TOken
+
+    Route::post('login-user',[APIController::class,'loginUser']);
+
+    // Logout API - Logout User and delete API token
+
+    Route::post ('logout-user',[APIController::class,'logoutUser']);
+
     // PUT API - Update one or more records
     Route::put('update-user-details', [APIController::class, 'updateUserDetails']);
 
@@ -45,5 +53,6 @@ Route::namespace('App\Http\Controllers')->group(function(){    //since they use 
 
     // DELETE API - Delete multiple users with JSON payload
     Route::delete('delete-multiple-users-json', [APIController::class, 'deleteMultipleUsersWithJson']);
+
 });
 

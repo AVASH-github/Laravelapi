@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Symfony\Component\HttpFoundation\Tests\RequestMatcher\IsJsonRequestMatcherTest;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 class APIController extends Controller
 {
     public function getUsers($id=null)
@@ -105,7 +106,6 @@ class APIController extends Controller
             return response()->json(["message"=>'User added successfully!'],201);
         }
     }
-
     public function registerUser(Request $request){
                 if($request->isMethod('post')){
                     $userData=$request->input();
@@ -115,7 +115,6 @@ class APIController extends Controller
                         "email" => "required|email|unique:users",
                         "password" => "required"
                 ];
-
                 $customMessage=[
                         'name.required' => 'Name is required',
                         'email.required' => 'Email is required',
@@ -123,33 +122,82 @@ class APIController extends Controller
                         'email.unique' => 'Email already exists in databse',
                         'password.required' => 'Password is required'
                 ];
-
                $validator= Validator::make($userData,$rules,  $customMessage);
                if($validator->fails()){
                 return response()->json($validator->errors(),422);
                } 
-
                     //Generate Unique Access Token
-
                     $apiToken = Str::random(60);
-
                     $user = new User;
-
                     $user->name=$userData['name'];
                     $user->email=$userData['email'];
                     $user->password=bcrypt($userData['password']);
                     $user->api_token=$apiToken;
                     $user->save();
-
-                    return response()->json([
-                        'status'=>true,
-                        "message"=>"User registered successfully",
-                        "token"=>$apiToken
-                    ]
-                        ,
-                        201);
-
+                    return response()->json(['status'=>true, "message"=>"User registered successfully","token"=>$apiToken] ,201);
                 }
+    }
+
+    public function loginUser(Request $request){
+        if($request->isMethod('post')){
+            $userData=$request->input();
+            // echo "<pre>";print_r($userData);die;
+            $rules=[
+               
+                "email" => "required|email|exists:users",
+                "password" => "required"
+        ];
+
+        $customMessage=[ 
+                'email.required' => 'Email is required',
+                'email.email' => 'Valid Email is required',
+                'email.exists' => 'Email does not exists in databse',
+                'password.required' => 'Password is required'
+        ];
+
+       $validator= Validator::make($userData,$rules,  $customMessage);
+       if($validator->fails()){
+        return response()->json($validator->errors(),422);
+       } 
+
+       $userDetails = User::where('email',$userData['email'])->first();
+
+       if(password_verify($userData['password'],$userDetails->password)){
+
+        $apiToken=Str::random(60);
+
+        User::where('email',$userData['email'])->update(['api_token'=>$apiToken]);
+
+        return response()->json(['status'=>true,"message"=>"User logged in successfully!","token"=>$apiToken],201);
+       }
+       else{
+
+        return response()->json(['status'=>false,"message"=>"Password is incorrect!"],201);
+       }
+        }
+
+    }
+
+    
+    
+    
+    
+    public function logoutUser(Request $request){
+        $api_token = $request->header('Authorization');
+        if(empty($api_token)){
+            $message="User Token is missing in API Header";
+            return response()->json(['status'=>false,'message'=>$message],422);
+        }
+        else{
+             $api_token=str_replace("Bearer","",$api_token);
+             $userCount = User::where('api_token',$api_token)->count();
+            
+             if($userCount>0){
+                User::where('api_token',$api_token)->update(['api_token'=>NULL]);
+                $message="User Logged out successfully!";
+                return response()->json(['status'=>true,'message'=>$message],200);
+             }
+        }
     }
     public function addMultipleUsers(Request $request){
 
@@ -202,7 +250,6 @@ class APIController extends Controller
                if($validator->fails()){
                 return response()->json($validator->errors(),422);
                } 
-
                     User::where('id',$userData['id'])->update(['name'=>$userData['name'],'password'=>bcrypt($userData['password'])]);
 
                     return response()->json(["message"=>"User Details Updated Successfully"],202);

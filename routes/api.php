@@ -57,8 +57,6 @@ Route::namespace('App\Http\Controllers')->group(function(){    //since they use 
 
 });
 
-
-
 Route::post('login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
